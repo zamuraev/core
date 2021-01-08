@@ -1,0 +1,89 @@
+ПАКЕТ JAVA.IO
+РАБОТА С ПОТОКАМИ  это работа с текстровыми файлами, и с байтовыми файлами
+
+OutputStream - запись в поток данных
+InputStream - чтение из потока данных
+
+работата с текстом, чтобы читать файл напрямую - FileReader, FileWriter
+работа с буферизированным чтением\записью из текстового файла, - BufferedReader, BufferedWriter
+
+для работы с бинарными файлами - FileInputStream, FileOutputStream
+нельзя использовать стримы предназначенный для работы с текстовыми файлами при работе с бинарными файлами
+тут можно пользоватся и буферизацей BufferedInputStreamReader, BufferedOutputStreamWriter
+
+DataInputStream, DataOutputStream - позволяют записывать в файл и читать из него примитивные типы данных: int, long, byte, boolean...
+DataInputStream inputStream = new DataInputStream(new FileInputStream("test2.bin");
+DataOutputStream outputStream = new DataOutputStream(new FileOutputStream("test2.bin"));
+
+Сериализация - это процесс преобразования обьекта в последовательность байт. Десериализация - это процесс востановления обьекта из этих байт.
+ObjectInputStream, ObjectOutputStream - позволяет записывать в файл (делать серриализацию) и читать из него обьекты (десириализация - превращать данные из файла обратно в обьект)
+ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("test2.bin"));
+ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("test2.bin"));
+outputStream.writeObject(object);
+(кастинг) inputStream.readObject();
+чтобы сериализовать обьект он должен имплементировать интерфейс Serializable - это просто интерфейс-метка
+поле класса что помечено словом transient сериализироватся не будет
+serialVersionUID - сериализовали обьект в файл одной версии (одного вида), после этого изменили обьект и пытаемся обратно его дессириализовать - вылетит InvalidClassException
+Если меняем класс, обьект которого мы хотим серриализовать - нужно менять и версию этого класса. поле SerialVersionUID - это и есть версия класса.
+Java машина сама поставит версию, но она очень чувствительна к изменениям в обьекте, лучше эту версию прописывать вручную через поле в классе - private static long serialVersionUID
+Используется для того, чтобы проверить версию класса, когда делают серриализацию и дессириализацию
+
+RandomAccessFile -> позволяет читать информацию из любого места файла и записывать инвормацию в любое место файла.
+чтение и запись происходят в то место, где стоит курсор
+RandomAccessFile file = new RandomAccessFile("test104.txt", "rw")
+2й параметр - это режим работы с файлом: read-write(rw), read (r), write(w)
+
+УПРАВЛЕНИЕ ДИРЕКТОРИЯМИ
+Класс File позволяет управлять информацией о файлах и директориях.
+путь к файлу или папке может быть абсолютным (полный путь) или относительным (относительно нашего проекта)
+
+ПАКЕТ JAVA NIO
+использование Buffers and Channels для чтения и записи файлов
+//read
+PR <- Buffer <- Channel <- File (channel читает информацию из файла и записывает в buffer)
+//write
+PR-> Buffer -> Channel -> File (channel читает информацию из buffer и записывает ее в файл)
+Channel по типу стрима, но в Nio. но есть разница.
+1. стримы работают в одном направлении, т.е или пишем или читаем - Channel работают в оба направления
+2. Channel всегда работает с Buffer, т.е. или читает или записывает в него.
+3. из Buffer мы может читать информацию, затем возвращатся к уже прочитанной, потом снова ее просматривать, т.е гулять по буферу. Это нельзя было делать в стримах
+
+есть разные типы Channel - datagram, socket, serverSocket channels. разбираем FileChannel
+разные типы буфферов - Char Buffer, Double Buffer, Long Buffer, Float Buffer, Int Buffer, Long Buffer, Short Buffer. разбираем Byte Buffers
+
+flip() меняет режим буффера, из режима записи в режим чтения.
+Buffer write and read mode: 3 понятия
+1) capacity - можем записать в буфер количество байтов, что не превышает его capacity (вместимость)
+2) position - записываем в буфер на определенную позицию, начальная 0, когда записываем - позиция смещается.
+write mode с 0.... по 10 позицию. 10 позиция последний элемент на запись. метод flip() -> теперь c 10 позиции write mode на запись мы переключаемся на 0 позицию на read mode
+read mode с 0.... по 10 позицию. 10 позиция последний элемент на чтение. метод clear() -> теперь с 10 на чтение мы переключаемся на 0 позицию на запись. при записывании с 0 позиции старые данный в ячейке затираются на новые.
+3) limit - в write mode то же самое что и capacity, максимальное количество байт что мы можем записать в буффер. в read mode после вызова метода flip() - максимальное количество байт что мы можем прочитать из буффера
+условно после записи в буфер 10 байт и вызова метода flip() - максимальное количество байт что может прочитать буффер - 10
+ByteBuffer buffer = ByteBuffer.allocate(10); тут capacity = 10;
+channel.read(buffer)
+buffer.flip()
+buffer.hasRemaining()
+buffer.get()
+buffer.clear()
+buffer.put()
+channel.write(buffer)
+buffer.rewind()
+
+
+Интерфейc Path & class Files
+Обьект типа Path представляет собой путь к файлу или директории.
+Path path = Paths.get("text.txt");
+
+Files.walkFileTree
+Метод Files.walkFileTree(Path start, FileVisitorvisitor) используется для обхода дерева файлов.
+Логика обхода дерева файлов заключается в классе, имплементирующем интерфейс FileVisitor.
+preVisitDirectory-срабатывает перед обращением к элементам папки;
+visitFile-срабатывает при обращении к фалу;
+postVisitDirectory-срабатывает после обращения ко всем элементам папки;
+visitFileFailed-срабатывает когда файлпо каким-то причинамнедоступен.
+------enumFileVisitResult------
+Значения FileVisitResult:
+CONTINUE–означает, что нужно продолжать обход по файлам;
+TERMINATE–означает, что нужно немедленно прекратить обход по файлам;
+SKIP_SUBTREE–означает, что в данную директорию заходить не надо;
+SKIP_SIBLINGS–означает, в данной директории продолжать обход по файлам не нужно.

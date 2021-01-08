@@ -1,0 +1,7 @@
+List - упорядоченная последовательность элементов, позволяющая хранить дубликаты и null. Каждый элемент имеент индекс
+Iterable -> Collections -> (List. Set, Queue)
+Map
+
+List -> ArrayList, LinkedList, Vector->Stack
+
+
